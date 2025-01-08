@@ -19,6 +19,7 @@ func NewService() Service {
 type service struct {
 }
 
+// 获取助手列表
 func (s *service) List() (data []*global.Assistant, err error) {
 	// 文件路径
 	filePath := "voice-assistant.json"

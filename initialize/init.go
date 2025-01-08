@@ -3,6 +3,8 @@ package initialize
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
+	"os"
 	"time"
 	"voice-assistant-manager/controller"
 	"voice-assistant-manager/global"
@@ -37,4 +39,12 @@ func GinInit() {
 	controller.Router.InitApiRouter(r)
 	// 启动gin server
 	r.Run("0.0.0.0:9090")
+}
+
+func InitConfig() {
+	if os.Getenv("CARTESIA_API_KEY") == "" {
+		log.Fatalf("CARTESIA_API_KEY not set.....")
+	} else {
+		global.CartesiaApiKey = os.Getenv("CARTESIA_API_KEY")
+	}
 }

@@ -1,8 +1,11 @@
 package global
 
+import "time"
+
 var (
-	AuthUsername = "voice-assistant-manager"
-	AuthPassword = "voice-assistant-manager"
+	AuthUsername   = "voice-assistant-manager"
+	AuthPassword   = "voice-assistant-manager"
+	CartesiaApiKey string
 )
 
 const DefaultAssistant = `[
@@ -30,4 +33,16 @@ type Assistant struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Voice       string `json:"voice"`
+}
+
+type CartesiaVoices struct {
+	Id          string    `json:"id"`
+	IsPublic    bool      `json:"is_public"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	Embedding   []float64 `json:"embedding"`
+	Language    string    `json:"language"`
+	UserId      string    `json:"user_id"`
+	BaseVoiceId string    `json:"base_voice_id"`
 }

@@ -1,0 +1,57 @@
+package voices
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+	"voice-assistant-manager/service/voices"
+)
+
+type Handler struct {
+	voicesService voices.Service
+}
+
+func NewHandler() *Handler {
+	return &Handler{
+		voicesService: voices.NewService(),
+	}
+}
+
+// VoiceInfo 表示语音信息的结构体
+type VoiceInfo struct {
+	ID          string `json:"id"`
+	Description string `json:"description"`
+}
+
+// ListCartesia 获取 Cartesia 语音列表
+func (h *Handler) ListCartesia(ctx *gin.Context) {
+	// 获取数据
+	data, err := h.voicesService.ListCartesiaVoices()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": 1006,
+			"msg":  "获取Cartesia语音列表失败: " + err.Error(),
+		})
+		return
+	}
+
+	// 转换数据格式
+	voiceList := make([]VoiceInfo, 0, len(data))
+	for _, voice := range data {
+		voiceList = append(voiceList, VoiceInfo{
+			ID:          voice.Id,
+			Description: voice.Description,
+		})
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": 1000,
+		"msg":  "获取Cartesia语音列表成功",
+		"data": voiceList,
+	})
+}
+
+func Install(parent *gin.RouterGroup) {
+	handler := NewHandler()
+	sp := parent.Group("/voice")
+	sp.GET("/cartesia/list", handler.ListCartesia)
+}
