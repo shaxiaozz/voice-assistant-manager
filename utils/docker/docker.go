@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/wonderivan/logger"
 )
@@ -72,4 +73,21 @@ func ExecuteCommand(containerName string, command ...string) error {
 	}
 
 	return nil
-} 
+}
+
+// RestartContainer 重启指定容器
+func RestartContainer(containerName string) error {
+	if dockerClient == nil {
+		return fmt.Errorf("Docker 客户端未初始化")
+	}
+
+	ctx := context.Background()
+	timeout := 5 // 3秒超时
+	err := dockerClient.ContainerRestart(ctx, containerName, container.StopOptions{Timeout: &timeout})
+	if err != nil {
+		return fmt.Errorf("重启容器失败: %v", err)
+	}
+
+	logger.Info("容器 %s 重启成功", containerName)
+	return nil
+}

@@ -77,15 +77,24 @@ func (s *service) UpdateVoiceID(voiceID string) error {
 		// 修改语音ID
 		data[key].Voice = voiceID
 
+		// 容器名称
+		containerName := "voice-pipeline-" + value.ID + "-agent-python"
+		
 		// 执行 Docker 命令更新环境变量
 		command := []string{"python", "update_env_file.py", "CARTESIA_VOICE_ID", voiceID}
-		containerName := "voice-pipeline-" + value.ID + "-agent-python"
 		if err := docker.ExecuteCommand(containerName, command...); err != nil {
 			logger.Error("执行Docker命令失败: %v\n", err)
 			return err
 		}
+
+		// 重启容器
+		if err := docker.RestartContainer(containerName); err != nil {
+			logger.Error("重启容器失败: %v\n", err)
+			return err
+		}
+		
+		logger.Info("容器 %s 更新并重启成功", containerName)
 	}
-	logger.Info(data)
 
 	// 转换为 JSON 字符串
 	dataJSON, err := json.Marshal(data)
@@ -100,6 +109,6 @@ func (s *service) UpdateVoiceID(voiceID string) error {
 		return err
 	}
 
-	logger.Info("成功更新语音ID并执行Docker命令")
+	logger.Info("成功更新语音ID并重启所有相关容器")
 	return nil
 }
