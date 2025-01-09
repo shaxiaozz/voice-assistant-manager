@@ -19,6 +19,7 @@ func NewHandler() *Handler {
 // VoiceInfo 表示语音信息的结构体
 type VoiceInfo struct {
 	ID          string `json:"id"`
+	Language    string `json:"language"`
 	Description string `json:"description"`
 }
 
@@ -37,8 +38,12 @@ func (h *Handler) ListCartesia(ctx *gin.Context) {
 	// 转换数据格式
 	voiceList := make([]VoiceInfo, 0, len(data))
 	for _, voice := range data {
+		if voice.Description == "" {
+			continue
+		}
 		voiceList = append(voiceList, VoiceInfo{
 			ID:          voice.Id,
+			Language:    voice.Language,
 			Description: voice.Description,
 		})
 	}
