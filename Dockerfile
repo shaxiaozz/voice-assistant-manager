@@ -1,4 +1,4 @@
-FROM golang:1.22.2-alpine as builder
+FROM golang:1.22.7-alpine as builder
 WORKDIR /data/voice-assistant-manager-code
 RUN apk add --no-cache upx ca-certificates tzdata
 COPY ./go.mod ./
