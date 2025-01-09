@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"voice-assistant-manager/global"
+	"voice-assistant-manager/utils/docker"
 )
 
 type Service interface {
@@ -72,9 +73,17 @@ func (s *service) UpdateVoiceID(voiceID string) error {
 		return err
 	}
 
-	// 修改语音ID
-	for key := range data {
+	for key, value := range data {
+		// 修改语音ID
 		data[key].Voice = voiceID
+
+		// 执行 Docker 命令更新环境变量
+		command := []string{"python", "update_env_file.py", "CARTESIA_VOICE_ID", voiceID}
+		containerName := "voice-pipeline-" + value.ID + "-agent-python"
+		if err := docker.ExecuteCommand(containerName, command...); err != nil {
+			logger.Error("执行Docker命令失败: %v\n", err)
+			return err
+		}
 	}
 	logger.Info(data)
 
@@ -84,6 +93,13 @@ func (s *service) UpdateVoiceID(voiceID string) error {
 		logger.Error("转换 JSON 字符串失败: %v\n", err)
 		return err
 	}
+
 	// 重新写入文件
-	return ioutil.WriteFile(filePath, dataJSON, 0644)
+	if err := ioutil.WriteFile(filePath, dataJSON, 0644); err != nil {
+		logger.Error("写入文件失败: %v\n", err)
+		return err
+	}
+
+	logger.Info("成功更新语音ID并执行Docker命令")
+	return nil
 }

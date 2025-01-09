@@ -5,6 +5,8 @@ go 1.22.2
 require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/wonderivan/logger v1.0.0
+	github.com/docker/docker v24.0.7+incompatible
+	github.com/docker/go-connections v0.4.0
 )
 
 require (
