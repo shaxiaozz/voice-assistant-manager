@@ -10,6 +10,7 @@ import (
 
 type Service interface {
 	List() (data []*global.Assistant, err error)
+	UpdateVoiceID(voiceID string) error
 }
 
 func NewService() Service {
@@ -50,4 +51,39 @@ func (s *service) List() (data []*global.Assistant, err error) {
 	}
 
 	return data, nil
+}
+
+// 修改助手语音ID
+func (s *service) UpdateVoiceID(voiceID string) error {
+	// 文件路径
+	filePath := "voice-assistant.json"
+	// 读取文件内容
+	fileData, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		logger.Error("读取文件失败: %v\n", err)
+		return err
+	}
+
+	// 解析 JSON 数据
+	var data []global.Assistant
+	err = json.Unmarshal(fileData, &data)
+	if err != nil {
+		logger.Error("解析 JSON 数据失败: %v\n", err)
+		return err
+	}
+
+	// 修改语音ID
+	for key := range data {
+		data[key].Voice = voiceID
+	}
+	logger.Info(data)
+
+	// 转换为 JSON 字符串
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		logger.Error("转换 JSON 字符串失败: %v\n", err)
+		return err
+	}
+	// 重新写入文件
+	return ioutil.WriteFile(filePath, dataJSON, 0644)
 }
