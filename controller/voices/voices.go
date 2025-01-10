@@ -24,6 +24,7 @@ type VoiceInfo struct {
 	ID          string `json:"id"`
 	Language    string `json:"language"`
 	Description string `json:"description"`
+	Gender      string `json:"gender,omitempty"`
 }
 
 // ListCartesia 获取 Cartesia 语音列表
@@ -48,6 +49,7 @@ func (h *Handler) ListCartesia(ctx *gin.Context) {
 			ID:          voice.Id,
 			Language:    voice.Language,
 			Description: voice.Description,
+			Gender:      voice.Gender,
 		})
 	}
 

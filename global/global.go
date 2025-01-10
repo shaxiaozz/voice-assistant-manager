@@ -41,8 +41,9 @@ type CartesiaVoices struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
+	Gender      string    `json:"gender,omitempty"`
 	Embedding   []float64 `json:"embedding"`
 	Language    string    `json:"language"`
-	UserId      string    `json:"user_id"`
-	BaseVoiceId string    `json:"base_voice_id"`
+	ApiStatus   string    `json:"api_status"`
+	UserId      string    `json:"user_id,omitempty"`
 }
