@@ -42,9 +42,10 @@ func (h *Handler) ListCartesia(ctx *gin.Context) {
 	// 转换数据格式
 	voiceList := make([]VoiceInfo, 0, len(data))
 	for _, voice := range data {
-		if voice.Description == "" {
+		if voice.Description == "" || voice.Gender == "" {
 			continue
 		}
+
 		voiceList = append(voiceList, VoiceInfo{
 			ID:          voice.Id,
 			Language:    voice.Language,
