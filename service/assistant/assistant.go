@@ -2,12 +2,19 @@ package assistant
 
 import (
 	"encoding/json"
-	"github.com/wonderivan/logger"
 	"io/ioutil"
 	"os"
+	"sync"
 	"voice-assistant-manager/global"
 	"voice-assistant-manager/utils/docker"
+
+	"github.com/wonderivan/logger"
 )
+
+type containerOperation struct {
+	containerName string
+	operation     func() error
+}
 
 type Service interface {
 	List() (data []*global.Assistant, err error)
@@ -15,10 +22,21 @@ type Service interface {
 }
 
 func NewService() Service {
-	return &service{}
+	s := &service{
+		operationChan:  make(chan containerOperation, 100),
+		containerLocks: make(map[string]*sync.Mutex),
+	}
+
+	// 启动 worker
+	go s.processDockerOperations()
+
+	return s
 }
 
 type service struct {
+	operationChan  chan containerOperation
+	containerLocks map[string]*sync.Mutex
+	lockMutex      sync.RWMutex
 }
 
 // 获取助手列表
@@ -73,27 +91,52 @@ func (s *service) UpdateVoiceID(voiceID string) error {
 		return err
 	}
 
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(data))
+
 	for key, value := range data {
 		// 修改语音ID
 		data[key].Voice = voiceID
 
 		// 容器名称
 		containerName := "voice-pipeline-" + value.ID + "-agent-python"
-		
-		// 执行 Docker 命令更新环境变量
-		command := []string{"python", "update_env_file.py", "CARTESIA_VOICE_ID", voiceID}
-		if err := docker.ExecuteCommand(containerName, command...); err != nil {
-			logger.Error("执行Docker命令失败: %v\n", err)
-			return err
-		}
 
-		// 重启容器
-		if err := docker.RestartContainer(containerName); err != nil {
-			logger.Error("重启容器失败: %v\n", err)
+		wg.Add(1)
+		go func(containerName string) {
+			defer wg.Done()
+
+			// 执行命令
+			s.operationChan <- containerOperation{
+				containerName: containerName,
+				operation: func() error {
+					command := []string{"python", "update_env_file.py", "CARTESIA_VOICE_ID", voiceID}
+					if err := docker.ExecuteCommand(containerName, command...); err != nil {
+						errChan <- err
+						return err
+					}
+
+					// 重启容器
+					if err := docker.RestartContainer(containerName); err != nil {
+						errChan <- err
+						return err
+					}
+
+					logger.Info("容器 %s 更新并重启成功", containerName)
+					return nil
+				},
+			}
+		}(containerName)
+	}
+
+	// 等待所有操作完成
+	wg.Wait()
+	close(errChan)
+
+	// 检查是否有错误
+	for err := range errChan {
+		if err != nil {
 			return err
 		}
-		
-		logger.Info("容器 %s 更新并重启成功", containerName)
 	}
 
 	// 转换为 JSON 字符串
@@ -111,4 +154,33 @@ func (s *service) UpdateVoiceID(voiceID string) error {
 
 	logger.Info("成功更新语音ID并重启所有相关容器")
 	return nil
+}
+
+// 添加处理 Docker 操作的方法
+func (s *service) processDockerOperations() {
+	for op := range s.operationChan {
+		go func(op containerOperation) {
+			s.lockMutex.RLock()
+			lock, exists := s.containerLocks[op.containerName]
+			if !exists {
+				s.lockMutex.RUnlock()
+				s.lockMutex.Lock()
+				// 双重检查
+				if lock, exists = s.containerLocks[op.containerName]; !exists {
+					lock = &sync.Mutex{}
+					s.containerLocks[op.containerName] = lock
+				}
+				s.lockMutex.Unlock()
+			} else {
+				s.lockMutex.RUnlock()
+			}
+
+			lock.Lock()
+			defer lock.Unlock()
+
+			if err := op.operation(); err != nil {
+				logger.Error("执行Docker操作失败 %s: %v", op.containerName, err)
+			}
+		}(op)
+	}
 }
