@@ -195,14 +195,14 @@ func (s *service) UpdateVoiceSpeedEmotio(voiceSpeed, voiceEmotio string) error {
 			s.operationChan <- containerOperation{
 				containerName: containerName,
 				operation: func() error {
-					command1 := []string{"python", "update_env_file.py", "CARTESIA_SPEED", voiceSpeed}
-					if err := docker.ExecuteCommand(containerName, command1...); err != nil {
+					command := []string{"python", "update_env_file.py", "CARTESIA_SPEED", voiceSpeed}
+					if err := docker.ExecuteCommand(containerName, command...); err != nil {
 						errChan <- err
 						return err
 					}
 
-					command2 := []string{"python", "update_env_file.py", "CARTESIA_EMOTION", voiceEmotio}
-					if err := docker.ExecuteCommand(containerName, command2...); err != nil {
+					command = []string{"python", "update_env_file.py", "CARTESIA_EMOTION", voiceEmotio}
+					if err := docker.ExecuteCommand(containerName, command...); err != nil {
 						errChan <- err
 						return err
 					}
