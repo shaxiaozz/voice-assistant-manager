@@ -9,6 +9,7 @@ import (
 	"voice-assistant-manager/controller"
 	"voice-assistant-manager/global"
 	"voice-assistant-manager/middle"
+	"voice-assistant-manager/utils/docker"
 )
 
 // 鉴权账号
@@ -49,8 +50,8 @@ func InitConfig() {
 	}
 
 	// 初始化 Docker 客户端
-	//err := docker.InitDocker()
-	//if err != nil {
-	//	log.Fatalf("初始化 Docker 客户端失败: %v", err)
-	//}
+	err := docker.InitDocker()
+	if err != nil {
+		log.Fatalf("初始化 Docker 客户端失败: %v", err)
+	}
 }
