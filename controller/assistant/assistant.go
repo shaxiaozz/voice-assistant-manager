@@ -66,9 +66,42 @@ func (h *Handler) UpdateVoiceID(ctx *gin.Context) {
 	})
 }
 
+// 修改助手语音速度与情感
+func (h *Handler) UpdateVoiceSpeedEmotio(ctx *gin.Context) {
+	params := new(struct {
+		VoiceSpeed  string `json:"voice_speed"`
+		VoiceEmotio string `json:"voice_emotio"`
+	})
+	if err := ctx.ShouldBindJSON(params); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code": 1006,
+			"msg":  "参数错误" + err.Error(),
+		})
+		return
+	}
+
+	// 修改ID
+	if err := h.assistantService.UpdateVoiceSpeedEmotio(params.VoiceSpeed, params.VoiceEmotio); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code": 1006,
+			"msg":  "修改助手语音速度与情感失败" + err.Error(),
+		})
+		return
+	}
+
+	// 返回数据
+	ctx.JSON(http.StatusOK, gin.H{
+		"code":              1000,
+		"msg":               "修改助手语音速度与情感成功",
+		"now_voice_speed":   params.VoiceSpeed,
+		"now_voice_emotion": params.VoiceEmotio,
+	})
+}
+
 func Install(parent *gin.RouterGroup) {
 	handler := NewHandler()
 	sp := parent.Group("/voice-assistant")
 	sp.GET("/list", handler.List)
 	sp.PUT("/update-voice-id", handler.UpdateVoiceID)
+	sp.PUT("/update-voice-speed-emotio", handler.UpdateVoiceSpeedEmotio)
 }

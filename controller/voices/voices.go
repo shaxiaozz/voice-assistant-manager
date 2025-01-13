@@ -66,10 +66,12 @@ func (h *Handler) ListCartesia(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"code":      1000,
-		"msg":       "获取Cartesia语音列表成功",
-		"data":      voiceList,
-		"now_voice": assistantData[0].Voice,
+		"code":              1000,
+		"msg":               "获取Cartesia语音列表成功",
+		"data":              voiceList,
+		"now_voice":         assistantData[0].Voice,
+		"now_voice_speed":   assistantData[0].VoiceSpeed,
+		"now_voice_emotion": assistantData[0].VoiceEmotion,
 	})
 }
 
